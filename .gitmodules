@@ -1,0 +1,9 @@
+[submodule "src/CompassAnnex"]
+	path = src/CompassAnnex
+	url = git@github.com:harlo/CompassAnnex.git
+[submodule "src/CompassFrontend"]
+	path = src/CompassFrontend
+	url = git@github.com:harlo/CompassFrontend.git
+[submodule "dutils"]
+	path = dutils
+	url = git@github.com:harlo/dutils.git
