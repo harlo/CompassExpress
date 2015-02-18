@@ -31,4 +31,5 @@ Once set up, you can hook in a number of desktop clients on your network.  This 
 
 1.	Either clone a fresh copy of [CompassFrontend][c_f] or use the one included in src/.
 1.	`cd CompassFrontend`
+1.	'git submodule update --init --recursive'
 1.	`./setup.sh /path/to/config/you/made.json`
