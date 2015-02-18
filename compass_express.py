@@ -91,7 +91,8 @@ def commit_d():
 	return (generate_run_routine(config) and generate_shutdown_routine(config))
 
 def update_d():
-	return False
+	from dutils.conf import __load_config
+	return build_dockerfile("Dockerfile.update", __load_config(os.path.join(BASE_DIR, "config.json")))
 
 if __name__ == "__main__":
 	res = False

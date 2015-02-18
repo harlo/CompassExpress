@@ -39,5 +39,10 @@ You can then pull from the CompassAnnex or CompassFrontend packages on Github as
 
 By default, the git user.name and user.email directives are preconfigured.  You can change those directives to reflect your user account name and email by running `git config --global user.name "your name"`.  (Same goes for your email address).
 
+When you want to update the entire engine to the latest code on github, do
+
+	./run.sh update
+
+
 [c_f]: https://github.com/harlo/CompassFrontend
 [c_a]: https://github.com/harlo/CompassAnnex
