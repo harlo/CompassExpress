@@ -41,7 +41,8 @@ def init_d(with_config):
 		'annex_dir' : "/home/%s/unveillance_remote" % config['USER'],
 		'uv_server_host' : config['DOCKER_IP'],
 		'uv_uuid' : config['IMAGE_NAME'],
-		'uv_log_cron' : 3
+		'uv_log_cron' : 3,
+		'ssh_root' : "/home/%s/.ssh" % config['USER']
 	}
 
 	frontend_config = {
@@ -77,10 +78,11 @@ def build_d():
 		return False
 
 	from dutils.dutils import generate_build_routine
-	return build_dockerfile("Dockerfile.build", config) and generate_build_routine(config, "compass_express")
-
-def commit_d():
-	res, config = append_to_config({'PUBLISH_PORTS' : " -p ".join(["%d:%d" % (p, p) for p in [API_PORT, FRONTEND_PORT, MESSAGE_PORT]])[1:]})
+	return (build_dockerfile("Dockerfile.build", config) and generate_build_routine(config))
+	
+def commit_d():	
+	res, config = append_to_config({'PUBLISH_PORTS' : [API_PORT, FRONTEND_PORT, MESSAGE_PORT]},
+		return_config=True)
 
 	if not res:
 		return False

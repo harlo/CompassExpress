@@ -4,5 +4,6 @@
 *.sh
 Dockerfile
 venv/
+src/gensim_lib/
 
 !src/*.sh
