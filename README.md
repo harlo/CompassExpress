@@ -10,9 +10,11 @@ After cloning, do the following:
 1.	`git submodule update --init --recursive`
 1.	Compass does topic modeling with Gensim, using Wikipedia as its corpus.  Grab a copy of the __Wikipedia corpus files__ (about 15 GB, unzipped) and add into /src:
 
-	wget -O src/gensim_lib.tar.gz https://tbd.oops
-	tar -xvzf src/gensim_lib.tar.gz
-	rm src/gensim_lib.tar.gz
+	`wget -O src/gensim_lib.tar.gz https://tbd.oops`
+
+	`tar -xvzf src/gensim_lib.tar.gz`
+
+	`rm src/gensim_lib.tar.gz`
 
 1.	`dutils/setup.sh`
 1.	Follow the prompts
