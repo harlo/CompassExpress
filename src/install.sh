@@ -10,7 +10,7 @@ function resolve_git {
 		return
 	fi
 
-	cd $1 && `pwd`
+	cd $1 && pwd
 	rm .git
 	git init
 
