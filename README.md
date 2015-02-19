@@ -19,7 +19,7 @@ After cloning, do the following:
 1.	`dutils/setup.sh`
 1.	Follow the prompts
 
-Upon successful installation, two new scripts should be generated: `run.sh` and `shutdown.sh`.
+Upon successful installation, three new scripts should be generated: `run.sh`, `shutdown.sh`, and `update.sh`.
 
 ### Usage
 
