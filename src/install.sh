@@ -14,7 +14,7 @@ function resolve_git {
 	rm .git
 	git init
 
-	git remote add $2
+	git remote add origin $2
 
 	cat > $1/.git/config <<'_EOF'
 [branch "master"]
@@ -65,13 +65,11 @@ _EOF
 git config --global user.name "compass"
 git config --global user.email "compass@j3m.info"
 
-cd ~/CompassAnnex && ./setup.sh /home/compass/unveillance.compass.annex.json
-source ~/.bash_profile
-cd ~/CompassFrontend && ./setup.sh /home/compass/unveillance.compass.frontend.json
-
-declare -a U_MODS=("CompassFrontend", "CompassAnnex")
+declare -a U_MODS=("CompassFrontend" "CompassAnnex")
 for U_MOD in "${U_MODS[@]}"; do
 	resolve_git ~/$U_MOD "git@github.com:harlo/$U_MOD.git"
 done
 
-
+cd ~/CompassAnnex && ./setup.sh /home/compass/unveillance.compass.annex.json
+source ~/.bash_profile
+cd ~/CompassFrontend && ./setup.sh /home/compass/unveillance.compass.frontend.json

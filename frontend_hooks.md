@@ -37,8 +37,10 @@ Once set up, you can hook in a number of desktop clients on your network.  This 
 
 1.	From the engine, run the following:
 
-	`cd ~/CompassAnnex/lib/Annex`
+	cd ~/CompassAnnex/lib/Annex && python import_key.py /path/to/that/key.pub
 
-	`python import_key.py /path/to/that/new/key.pub`
+	Once you have a key installed, you can access the engine via a local Frontend.
 
-1.	You can now exit out of the shell.  Be sure to save state 
+1.	You can now exit out of the shell.  Be sure to save state.
+
+[c_f]: http://github.com/harlo/CompassFrontend
