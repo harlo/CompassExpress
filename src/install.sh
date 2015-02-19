@@ -5,13 +5,12 @@ function parse_directive {
 }
 
 function resolve_git {
-	cd $1 && `pwd`
-
 	file $1/.git | grep "directory"
 	if ([ $? -eq 0 ]); then
 		return
 	fi
-	
+
+	cd $1 && `pwd`
 	rm .git
 	git init
 
@@ -59,9 +58,7 @@ _EOF
 				U_PATH=""
 				S_PATH=""
 			fi
-			
 		done
-
 	fi
 }
 
