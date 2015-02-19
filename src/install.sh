@@ -16,7 +16,7 @@ function resolve_git {
 
 	git remote add origin $2
 
-	cat > $1/.git/config <<'_EOF'
+	cat >> $1/.git/config <<'_EOF'
 [branch "master"]
 	remote = origin
 	merge = refs/head/master
