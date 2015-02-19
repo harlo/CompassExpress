@@ -13,12 +13,12 @@ DEFAULT_PORTS = [22, API_PORT, MESSAGE_PORT, FRONTEND_PORT, NLP_PORT]
 
 def init_d(with_config):
 	conf_keys = [
-		DUtilsKeyDefaults['USER'],
 		DUtilsKeyDefaults['USER_PWD'],
 		DUtilsKeyDefaults['IMAGE_NAME']
 	]
 
 	config = build_config(conf_keys, with_config)
+	config['USER'] = "compass"
 
 	from dutils.dutils import get_docker_exe, get_docker_ip
 
