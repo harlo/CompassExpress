@@ -6,12 +6,18 @@ function parse_directive {
 
 function resolve_git {
 	cd $1 && `pwd`
+
+	file $1/.git | grep "directory"
+	if ([ $? -eq 0 ]); then
+		return
+	fi
+	
 	rm .git
 	git init
 
 	git remote add $2
 
-	cat > .git/config <<'_EOF'
+	cat > $1/.git/config <<'_EOF'
 [branch "master"]
 	remote = origin
 	merge = refs/head/master
