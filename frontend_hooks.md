@@ -31,7 +31,7 @@ Once set up, you can hook in a number of desktop clients on your network.  This 
 
 1.	On the machine hosting the new Frontend, either clone a fresh copy of [CompassFrontend][c_f] or use the one included in src/.
 1.	`cd CompassFrontend`
-1.	'git submodule update --init --recursive'
+1.	`git submodule update --init --recursive`
 1.	`./setup.sh /path/to/config/you/made.json`
 1.	Now, push your newly-generated key to the Engine.  The simplest way to do so is to copy-paste its contents into a file on the engine, using `vim` for example.
 
