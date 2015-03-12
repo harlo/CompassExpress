@@ -1,7 +1,7 @@
 import os, json
 from sys import argv, exit
 
-from dutils.conf import DUtilsKey, DUtilsKeyDefaults, build_config, BASE_DIR, append_to_config, save_config
+from dutils.conf import DUtilsKey, DUtilsKeyDefaults, build_config, BASE_DIR, append_to_config, save_config, __load_config
 from dutils.dutils import build_routine, build_dockerfile
 
 API_PORT = 8889
@@ -9,31 +9,57 @@ MESSAGE_PORT = 8890
 FRONTEND_PORT = 8888
 NLP_PORT = 8887
 
-DEFAULT_PORTS = [22, API_PORT, MESSAGE_PORT, FRONTEND_PORT, NLP_PORT]
+DEFAULT_PORTS = [22]
 
 def init_d(with_config):
+	port_to_int = lambda p : int(p.strip())
+	clean_up_port_map = lambda p : "%s%s" % (p.split(":")[1], p) if p.split(":")[0] == "" else p
+
 	conf_keys = [
 		DUtilsKeyDefaults['USER_PWD'],
-		DUtilsKeyDefaults['IMAGE_NAME']
+		DUtilsKeyDefaults['IMAGE_NAME'],
+		DUtilsKey("API_PORT", "Annex api port", API_PORT, str(API_PORT), port_to_int),
+		DUtilsKey("MESSAGE_PORT", "Annex messaging port", API_PORT + 1, str(API_PORT + 1), port_to_int),
+		DUtilsKey("FRONTEND_PORT", "Frontend port", FRONTEND_PORT, str(FRONTEND_PORT), port_to_int),
+		DUtilsKey("NLP_PORT", "NLP Port", NLP_PORT, str(NLP_PORT), port_to_int)
 	]
+
+	for k in ["API_PORT", "MESSAGE_PORT", "FRONTEND_PORT"]:
+		k_port = locals[k]
+		conf_keys.append(DUtilsKey("%s_PUBLISHED" % k, "What port will we publish %s on? (\"client:host\" or \":host\" if client doesn't need to change)" % k,
+			"%d:%d" % (k_port, k_port), "%d:%d" % (k_port, k_port), clean_up_port_map))
 
 	config = build_config(conf_keys, with_config)
 	config['USER'] = "compass"
 
-	from dutils.dutils import get_docker_exe, get_docker_ip
+	from dutils.dutils import get_docker_exe, get_docker_ip, validate_private_key
 
 	docker_exe = get_docker_exe()
 	if docker_exe is None:
 		return False
 
-	save_config(config)
+	save_config(config, with_config=with_config)
+
+	WORKING_DIR = BASE_DIR if with_config is None else os.path.dirname(with_config)
+	if not validate_private_key(os.path.join(WORKING_DIR, "%s.privkey" % config['IMAGE_NAME']), with_config):
+		return False
+	
 	res, config = append_to_config({
 		'DOCKER_EXE' : docker_exe, 
 		'DOCKER_IP' : get_docker_ip()
-	}, return_config=True)
+	}, return_config=True, with_config=with_config)
+
+	print config
 
 	if not res:
 		return False
+
+	from fabric.api import settings, local
+	with settings(warn_only=True):
+		if not os.path.exists(os.path.join(BASE_DIR, "src", ".ssh")):
+			local("mkdir %s" % os.path.join(BASE_DIR, "src", ".ssh"))
+	
+		local("cp %s %s" % (config['SSH_PUB_KEY'], os.path.join(BASE_DIR, "src", ".ssh", "authorized_keys")))
 
 	annex_config = {
 		'nlp_pkg' : "stanford-corenlp-full-2014-01-04",
@@ -47,13 +73,13 @@ def init_d(with_config):
 
 	frontend_config = {
 		'documentcloud_no_ask' : True,
-		'api.port' : FRONTEND_PORT,
+		'api.port' : config['FRONTEND_PORT'],
 		'gdrive_auth_no_ask' : True,
 		'server_host' : "localhost",
 		'server_force_ssh' : False,
 		'annex_local' : "/home/%s/unveillance_local" % config['USER'],
-		'server_port' : API_PORT,
-		'server_message_port' : MESSAGE_PORT,
+		'server_port' : config['API_PORT'],
+		'server_message_port' : config['MESSAGE_PORT'],
 		'annex_remote' : annex_config['annex_dir'],
 		'server_use_ssl' : False,
 		'uv_uuid' : annex_config['uv_uuid']
@@ -65,45 +91,67 @@ def init_d(with_config):
 	with open(os.path.join(BASE_DIR, "src", "unveillance.compass.frontend.json"), 'wb+') as F:
 		F.write(json.dumps(frontend_config))
 
-	from dutils.dutils import generate_init_routine
-	return build_dockerfile("Dockerfile.init", config) and generate_init_routine(config)
+	print "CONFIG JSONS WRITTEN."
 
-def build_d():
+	from dutils.dutils import generate_init_routine
+	return build_dockerfile("Dockerfile.init", config) and generate_init_routine(config, with_config=with_config)
+
+def build_d(with_config):
+	res, config = append_to_config({'COMMIT_TO' : "compass_express"}, return_config=True, with_config=with_config)
+	
+	if not res:
+		return False
+
+	for p in ["API_PORT", "MESSAGE_PORT", "FRONTEND_PORT", "NLP_PORT"]:
+		DEFAULT_PORTS.append(config[p])
+
 	res, config = append_to_config({
 		'DEFAULT_PORTS' : " ".join([str(p) for p in DEFAULT_PORTS]),
-		'COMMIT_TO' : "compass_express"
-	}, return_config=True)
-	
+		'PUBLISH_PORTS' : [
+			config['API_PORT_PUBLISHED'], 
+			config['FRONTEND_PORT_PUBLISHED'], 
+			config['MESSAGE_PORT_PUBLISHED']
+		]
+	}, return_config=True, with_config=with_config)
+
 	if not res:
 		return False
+
+	print config
 
 	from dutils.dutils import generate_build_routine
-	return (build_dockerfile("Dockerfile.build", config) and generate_build_routine(config))
+	return (build_dockerfile("Dockerfile.build", config) and generate_build_routine(config, with_config=with_config))
 	
-def commit_d():	
-	res, config = append_to_config({'PUBLISH_PORTS' : [API_PORT, FRONTEND_PORT, MESSAGE_PORT]},
-		return_config=True)
+def commit_d(with_config):	
+	try:
+		config = __load_config(with_config=with_config)
+	except Exception as e:
+		print e, type(e)
 
-	if not res:
+	if config is None:
 		return False
 
-	from dutils.dutils import generate_run_routine, generate_shutdown_routine
-	return (generate_run_routine(config) and generate_shutdown_routine(config))
+	print config
 
-def update_d():
-	from dutils.conf import __load_config
-	return build_dockerfile("Dockerfile.update", __load_config(os.path.join(BASE_DIR, "config.json")))
+	from dutils.dutils import generate_run_routine, generate_shutdown_routine, finalize_assets
+	return (generate_run_routine(config, src_dirs=["CompassAnnex", "CompassFrontend"], with_config=with_config) and generate_shutdown_routine(config, with_config=with_config) and finalize_assets(with_config=with_config))
+
+
+def update_d(with_config):
+	return build_dockerfile("Dockerfile.update", __load_config(with_config=with_config))
 
 if __name__ == "__main__":
 	res = False
+	with_config = None if len(argv) == 2 else argv[2]
 
 	if argv[1] == "init":
-		res = init_d(None if len(argv) == 2 else argv[2])
+		res = init_d(with_config)
 	elif argv[1] == "build":
-		res = build_d()
+		res = build_d(with_config)
 	elif argv[1] == "commit":
-		res = commit_d()
+		res = commit_d(with_config)
 	elif argv[1] == "update":
-		res = update_d()
+		res = update_d(with_config)
 	
+	print "RESULT: ", res 
 	exit(0 if res else -1)
