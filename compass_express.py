@@ -21,7 +21,7 @@ def init_d(with_config):
 		DUtilsKeyDefaults['USER_PWD'],
 		DUtilsKeyDefaults['IMAGE_NAME'],
 		DUtilsKey("GENSIM_LIB", "Where do you have the gensim_lib tarball?", 
-			DEFAULT_GENSIM_LIB, DEFAULT_GENSIM_LIB, None)
+			DEFAULT_GENSIM_LIB, DEFAULT_GENSIM_LIB, None),
 		DUtilsKey("API_PORT", "Annex api port", API_PORT, str(API_PORT), port_to_int),
 		DUtilsKey("MESSAGE_PORT", "Annex messaging port", API_PORT + 1, str(API_PORT + 1), port_to_int),
 		DUtilsKey("FRONTEND_PORT", "Frontend port", FRONTEND_PORT, str(FRONTEND_PORT), port_to_int),
