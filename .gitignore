@@ -2,6 +2,7 @@
 *.pyc
 *.json
 *.sh
+*.tar.gz
 Dockerfile
 venv/
 src/gensim_lib/

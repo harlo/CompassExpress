@@ -70,6 +70,9 @@ for U_MOD in "${U_MODS[@]}"; do
 	resolve_git ~/$U_MOD "git@github.com:harlo/$U_MOD.git"
 done
 
+cd ~/CompassAnnex/lib
+tar -xvzf gensim_lib.tar.gz
+
 cd ~/CompassAnnex && ./setup.sh /home/compass/unveillance.compass.annex.json
 source ~/.bash_profile
 cd ~/CompassFrontend && ./setup.sh /home/compass/unveillance.compass.frontend.json

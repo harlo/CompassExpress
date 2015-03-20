@@ -1,5 +1,6 @@
 import os, json
 from sys import argv, exit
+from fabric.api import settings, local
 
 from dutils.conf import DUtilsKey, DUtilsKeyDefaults, build_config, BASE_DIR, append_to_config, save_config, __load_config
 from dutils.dutils import build_routine, build_dockerfile
@@ -10,6 +11,7 @@ FRONTEND_PORT = 8888
 NLP_PORT = 8887
 
 DEFAULT_PORTS = [22]
+DEFAULT_GENSIM_LIB = os.path.join(BASE_DIR, "gensim_lib.tar.gz")
 
 def init_d(with_config):
 	port_to_int = lambda p : int(p.strip())
@@ -18,6 +20,8 @@ def init_d(with_config):
 	conf_keys = [
 		DUtilsKeyDefaults['USER_PWD'],
 		DUtilsKeyDefaults['IMAGE_NAME'],
+		DUtilsKey("GENSIM_LIB", "Where do you have the gensim_lib tarball?", 
+			DEFAULT_GENSIM_LIB, DEFAULT_GENSIM_LIB, None)
 		DUtilsKey("API_PORT", "Annex api port", API_PORT, str(API_PORT), port_to_int),
 		DUtilsKey("MESSAGE_PORT", "Annex messaging port", API_PORT + 1, str(API_PORT + 1), port_to_int),
 		DUtilsKey("FRONTEND_PORT", "Frontend port", FRONTEND_PORT, str(FRONTEND_PORT), port_to_int),
@@ -54,7 +58,6 @@ def init_d(with_config):
 	if not res:
 		return False
 
-	from fabric.api import settings, local
 	with settings(warn_only=True):
 		if not os.path.exists(os.path.join(BASE_DIR, "src", ".ssh")):
 			local("mkdir %s" % os.path.join(BASE_DIR, "src", ".ssh"))
@@ -91,6 +94,15 @@ def init_d(with_config):
 	with open(os.path.join(BASE_DIR, "src", "unveillance.compass.frontend.json"), 'wb+') as F:
 		F.write(json.dumps(frontend_config))
 
+	with settings(warn_only=True):
+		if not os.path.exists(config['GENSIM_LIB']):
+			from fabric.operations import prompt
+
+			download_gensim_lib = prompt("Where should we download gensim_lib.tar.gz from?")
+			local("wget -O %s --continue %s" % (config['GENSIM_LIB'], download_gensim_lib))
+
+		local("mv %s %s" % (config['GENSIM_LIB'], os.path.join(BASE_DIR, "src", "CompassAnnex", "lib")))
+
 	print "CONFIG JSONS WRITTEN."
 
 	from dutils.dutils import generate_init_routine
@@ -101,6 +113,9 @@ def build_d(with_config):
 	
 	if not res:
 		return False
+
+	with settings(warn_only=True):
+		local("mv %s %s" % (os.path.join(BASE_DIR, "src", "CompassAnnex", "lib", "gensim_lib.tar.gz"), config['GENSIM_LIB']))
 
 	for p in ["API_PORT", "MESSAGE_PORT", "FRONTEND_PORT", "NLP_PORT"]:
 		DEFAULT_PORTS.append(config[p])
@@ -150,6 +165,8 @@ if __name__ == "__main__":
 		res = build_d(with_config)
 	elif argv[1] == "commit":
 		res = commit_d(with_config)
+	elif argv[1] == "finish":
+		res = True
 	elif argv[1] == "update":
 		res = update_d(with_config)
 	
